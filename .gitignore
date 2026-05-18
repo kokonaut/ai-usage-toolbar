@@ -1,0 +1,32 @@
+# Generated Xcode project — sourced from project.yml
+*.xcodeproj/
+!project.yml
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+DerivedData/
+
+# Build output
+build/
+.build/
+*.dSYM/
+*.dSYM.zip
+
+# SPM
+Package.resolved
+.swiftpm/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Secrets — never commit
+.env
+.env.*
+*.p12
+*.mobileprovision
