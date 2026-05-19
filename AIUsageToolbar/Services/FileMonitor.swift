@@ -2,20 +2,27 @@ import Foundation
 import CoreServices
 import OSLog
 
-/// FSEvents-backed directory watcher that yields URLs whenever files under one
-/// of the watched roots change. Designed to drive `AppState.refresh()`.
+/// FSEvents-backed directory watcher that yields a tick on `events` whenever
+/// a file under one of the watched roots changes. Drives `AppState.refresh()`.
 ///
-/// Not yet wired into `AppState` — v0 uses a 60s polling loop. Switch to this
-/// once the parser is exercised against live data.
-final class FileMonitor {
-    private let log = Logger(subsystem: "dev.kokonaut.AIUsageToolbar", category: "FileMonitor")
-    private var stream: FSEventStreamRef?
-    private let queue: DispatchQueue
-    private let onChange: () -> Void
+/// The 250ms latency on FSEventStreamCreate naturally debounces rapid bursts.
+/// AppState consumes `events` with a `for await` loop; the 60s polling task is
+/// kept as a fallback in case FSEvents drops events.
+final class FileMonitor: @unchecked Sendable {
+    let events: AsyncStream<Void>
 
-    init(queue: DispatchQueue = .global(qos: .utility), onChange: @escaping () -> Void) {
+    private let continuation: AsyncStream<Void>.Continuation
+    private let log = Logger(subsystem: "dev.kokonaut.AIUsageToolbar", category: "FileMonitor")
+    private let queue: DispatchQueue
+    private var stream: FSEventStreamRef?
+
+    init(queue: DispatchQueue = .global(qos: .utility)) {
         self.queue = queue
-        self.onChange = onChange
+        var capturedContinuation: AsyncStream<Void>.Continuation!
+        self.events = AsyncStream { continuation in
+            capturedContinuation = continuation
+        }
+        self.continuation = capturedContinuation
     }
 
     func start(paths: [String]) {
@@ -26,7 +33,7 @@ final class FileMonitor {
         let cb: FSEventStreamCallback = { _, info, _, _, _, _ in
             guard let info else { return }
             let monitor = Unmanaged<FileMonitor>.fromOpaque(info).takeUnretainedValue()
-            monitor.onChange()
+            monitor.continuation.yield(())
         }
 
         let flags: FSEventStreamCreateFlags = UInt32(kFSEventStreamCreateFlagUseCFTypes | kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagNoDefer)
@@ -61,5 +68,6 @@ final class FileMonitor {
 
     deinit {
         stop()
+        continuation.finish()
     }
 }

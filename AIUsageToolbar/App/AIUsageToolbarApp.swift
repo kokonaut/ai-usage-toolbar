@@ -1,9 +1,5 @@
 import SwiftUI
 
-// MenuBarExtraAccess will be wired back in when we need NSStatusItem escape
-// hatches (settings window, popover sizing). For v0 the vanilla MenuBarExtra
-// API is sufficient.
-
 @main
 struct AIUsageToolbarApp: App {
     @StateObject private var state = AppState()
@@ -13,8 +9,14 @@ struct AIUsageToolbarApp: App {
             PopoverRoot()
                 .environmentObject(state)
         } label: {
-            MenuBarLabel(snapshot: state.snapshot)
+            MenuBarLabel(snapshot: state.snapshot, metric: state.inlineMetric)
         }
         .menuBarExtraStyle(.window)
+
+        Window("Settings", id: "settings") {
+            SettingsView()
+                .environmentObject(state)
+        }
+        .windowResizability(.contentSize)
     }
 }

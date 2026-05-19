@@ -45,3 +45,47 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: AIUsageToolbar/Resources/Info.plist
         ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+  AIUsageToolbarTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: AIUsageToolbarTests
+    resources:
+      - path: AIUsageToolbarTests/Fixtures
+        type: folder
+    dependencies:
+      - target: AIUsageToolbar
+      - sdk: XCTest.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.kokonaut.AIUsageToolbarTests
+        GENERATE_INFOPLIST_FILE: YES
+        FRAMEWORK_SEARCH_PATHS:
+          - $(inherited)
+          - $(PLATFORM_DIR)/Developer/Library/Frameworks
+          - $(SDKROOT)/Developer/Library/Frameworks
+        LD_RUNPATH_SEARCH_PATHS:
+          - $(inherited)
+          - $(PLATFORM_DIR)/Developer/Library/Frameworks
+          - $(SDKROOT)/Developer/Library/Frameworks
+
+schemes:
+  AIUsageToolbar:
+    build:
+      targets:
+        AIUsageToolbar: all
+        AIUsageToolbarTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AIUsageToolbarTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

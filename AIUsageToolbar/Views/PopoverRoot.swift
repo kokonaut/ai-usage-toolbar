@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PopoverRoot: View {
     @EnvironmentObject private var state: AppState
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,7 +34,7 @@ struct PopoverRoot: View {
             }
             .buttonStyle(.borderless)
             Button {
-                // TODO: open settings window
+                openWindow(id: "settings")
             } label: {
                 Image(systemName: "gearshape")
             }
